@@ -30,16 +30,16 @@ public class Controller extends JFrame {
 		this.add(myModel.getMyCanvas());
 		
 		
-		//create the interfaces
-		JPanel cPanel = new JPanel();
-		this.add(cPanel, BorderLayout.CENTER);
-		int mapName = JComponent.WHEN_IN_FOCUSED_WINDOW;
-		InputMap imap = cPanel.getInputMap(mapName);
-		KeyStroke cKey = KeyStroke.getKeyStroke('c');
-		imap.put(cKey, "color");
-		ActionMap amap = cPanel.getActionMap();
+//		//create the interfaces
+//		JPanel cPanel = new JPanel();
+//		this.add(cPanel, BorderLayout.CENTER);
+//		int mapName = JComponent.WHEN_IN_FOCUSED_WINDOW;
+//		InputMap imap = cPanel.getInputMap(mapName);
+//		KeyStroke cKey = KeyStroke.getKeyStroke('c');
+//		imap.put(cKey, "color");
+//		ActionMap amap = cPanel.getActionMap();
 //		amap.put("color", myModel.getColorCom());
-		this.requestFocus();
+//		this.requestFocus();
 		
 		
 		//responsible for the animation

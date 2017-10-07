@@ -3,17 +3,8 @@ package a2;
 import java.nio.FloatBuffer;
 import com.jogamp.common.nio.Buffers;
 
-import static com.jogamp.opengl.GL.GL_NO_ERROR;
-import static com.jogamp.opengl.GL.GL_TRIANGLES;
-import static com.jogamp.opengl.GL.GL_VERSION;
-import static com.jogamp.opengl.GL2ES2.GL_COMPILE_STATUS;
-import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
-import static com.jogamp.opengl.GL2ES2.GL_INFO_LOG_LENGTH;
-import static com.jogamp.opengl.GL2ES2.GL_LINK_STATUS;
-import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
-import static com.jogamp.opengl.GL2ES3.GL_COLOR;
-
-import com.jogamp.opengl.GL4;
+import com.jogamp.opengl.*;
+import static com.jogamp.opengl.GL4.*;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.GLEventListener;
@@ -26,6 +17,7 @@ public class View extends GLCanvas implements GLEventListener {
 	private Model myModel;
 	private int rendering_program;
 	private int vao[] = new int[1];
+	private int vbo[] = new int[2];
 
 	//private GLSLUtils util = new GLSLUtils();
 	
@@ -38,14 +30,42 @@ public class View extends GLCanvas implements GLEventListener {
 	@Override
 	public void display(GLAutoDrawable arg0) {
 		GL4 gl = (GL4) GLContext.getCurrentGL();
+		
+		gl.glClear(GL_DEPTH_BUFFER_BIT);
+		
 		gl.glUseProgram(rendering_program);
 		
 		float bkg[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		FloatBuffer bkgBuffer = Buffers.newDirectFloatBuffer(bkg);
 		gl.glClearBufferfv(GL_COLOR, 0, bkgBuffer);
 		
+		int mv_loc = gl.glGetUniformLocation(rendering_program, "mv_matrix");
+		int proj_loc = gl.glGetUniformLocation(rendering_program, "proj_matrix");
 
-		gl.glDrawArrays(GL_TRIANGLES,0,3);
+		float aspect = (float) myModel.getMyCanvas().getWidth() / (float) myModel.getMyCanvas().getHeight();
+		Matrix3D pMat = perspective(60.0f, aspect, 0.1f, 1000.0f);
+
+		Matrix3D vMat = new Matrix3D();
+		vMat.translate(-myModel.getCameraX(), -myModel.getCameraY(), -myModel.getCameraZ());
+
+		Matrix3D mMat = new Matrix3D();
+		mMat.translate(myModel.getCrysLocX(), myModel.getCrysLocY(), myModel.getCrysLocZ());
+
+		Matrix3D mvMat = new Matrix3D();
+		mvMat.concatenate(vMat);
+		mvMat.concatenate(mMat);
+		
+		gl.glUniformMatrix4fv(mv_loc, 1, false, mvMat.getFloatValues(), 0);
+		gl.glUniformMatrix4fv(proj_loc, 1, false, pMat.getFloatValues(), 0);
+		
+		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+		gl.glEnableVertexAttribArray(0);
+
+		gl.glEnable(GL_DEPTH_TEST);
+		gl.glDepthFunc(GL_LEQUAL);
+		
+		gl.glDrawArrays(GL_TRIANGLES, 0, 24);
 	}
 
 	@Override
@@ -61,6 +81,14 @@ public class View extends GLCanvas implements GLEventListener {
 		//creates the rendering program
 		rendering_program = createShaderProgram();
 		
+		setupVertices();
+		myModel.setCameraX(0.0f);
+		myModel.setCameraY(0.0f);
+		myModel.setCameraZ(8.0f);
+		myModel.setCrysLocX(0.0f);
+		myModel.setCrysLocY(-2.0f);
+		myModel.setCrysLocZ(0.0f);
+		
 		//
 		gl.glGenVertexArrays(vao.length, vao, 0);
 		gl.glBindVertexArray(vao[0]);
@@ -75,6 +103,43 @@ public class View extends GLCanvas implements GLEventListener {
 	public void dispose(GLAutoDrawable arg0) {
 		
 	}
+	
+	private void setupVertices() {
+		GL4 gl = (GL4) GLContext.getCurrentGL();
+		float[] vertex_positions =
+		{	-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+			0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+			-0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.5f,
+			0.0f, 0.0f, 0.5f, 0.0f, -1.0f, 0.0f, 0.5f, 0.0f, 0.0f,
+			0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, -0.5f,
+			0.0f, 0.0f, -0.5f, 0.0f, -1.0f, 0.0f, -0.5f, 0.0f, 0.0f,
+		};
+		
+		gl.glGenVertexArrays(vao.length, vao, 0);
+		gl.glBindVertexArray(vao[0]);
+		gl.glGenBuffers(vbo.length, vbo, 0);
+		
+		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		FloatBuffer vertBuf = Buffers.newDirectFloatBuffer(vertex_positions);
+		gl.glBufferData(GL_ARRAY_BUFFER, vertBuf.limit()*4, vertBuf, GL_STATIC_DRAW);
+	}  //setupVertices()
+	
+	private Matrix3D perspective(float fovy, float aspect, float n, float f)
+	{	float q = 1.0f / ((float) Math.tan(Math.toRadians(0.5f * fovy)));
+		float A = q / aspect;
+		float B = (n + f) / (n - f);
+		float C = (2.0f * n * f) / (n - f);
+		Matrix3D r = new Matrix3D();
+		r.setElementAt(0,0,A);
+		r.setElementAt(1,1,q);
+		r.setElementAt(2,2,B);
+		r.setElementAt(3,2,-1.0f);
+		r.setElementAt(2,3,C);
+		r.setElementAt(3,3,0.0f);
+		return r;
+	}  //perspective()
 
 	private int createShaderProgram()
 	{	GL4 gl = (GL4) GLContext.getCurrentGL();
@@ -83,8 +148,8 @@ public class View extends GLCanvas implements GLEventListener {
 		int[] linked = new int[1];
 	
 
-		String vshaderSource[] = GLSLUtils.readShaderSource("a1/shaderfiles/vert.shader");
-		String fshaderSource[] = GLSLUtils.readShaderSource("a1/shaderfiles/frag.shader");
+		String vshaderSource[] = GLSLUtils.readShaderSource("src/a2/vert.shader");
+		String fshaderSource[] = GLSLUtils.readShaderSource("src/a2/frag.shader");
 		int lengths[];
 
 		int vShader = gl.glCreateShader(GL_VERTEX_SHADER);

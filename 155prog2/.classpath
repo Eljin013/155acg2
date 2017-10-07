@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="C:/javagraphics/graphicslib3D/graphicslib3D.jar"/>
 	<classpathentry kind="lib" path="C:/javagraphics/jogl/jogamp-all-platforms/jogamp-all-platforms/jar/gluegen.jar"/>
 	<classpathentry kind="lib" path="C:/javagraphics/jogl/jogamp-all-platforms/jogamp-all-platforms/jar/gluegen-rt.jar"/>
 	<classpathentry kind="lib" path="C:/javagraphics/jogl/jogamp-all-platforms/jogamp-all-platforms/jar/gluegen-rt-android.jar"/>
@@ -131,5 +130,6 @@
 	<classpathentry kind="lib" path="C:/javagraphics/jogl/jogamp-all-platforms/jogamp-all-platforms/jar/jogl-all-noawt-natives-windows-i586.jar"/>
 	<classpathentry kind="lib" path="C:/javagraphics/jogl/jogamp-all-platforms/jogamp-all-platforms/jar/jogl-test.jar"/>
 	<classpathentry kind="lib" path="C:/javagraphics/jogl/jogamp-all-platforms/jogamp-all-platforms/jar/jogl-test-android.jar"/>
+	<classpathentry kind="lib" path="C:/javagraphics/graphicslib3D/graphicslib3D.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
