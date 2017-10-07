@@ -15,16 +15,10 @@ import graphicslib3D.*;
 @SuppressWarnings("serial")
 public class View extends GLCanvas implements GLEventListener {
 	private Model myModel;
-	private int rendering_program;
-	private int vao[] = new int[1];
-	private int vbo[] = new int[2];
-
 	//private GLSLUtils util = new GLSLUtils();
-	
 	
 	public View(Model model) {
 		this.myModel = model;
-
 	}
 	
 	@Override
@@ -33,23 +27,27 @@ public class View extends GLCanvas implements GLEventListener {
 		
 		gl.glClear(GL_DEPTH_BUFFER_BIT);
 		
-		gl.glUseProgram(rendering_program);
+		gl.glUseProgram(myModel.getRendering_program());
 		
 		float bkg[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		FloatBuffer bkgBuffer = Buffers.newDirectFloatBuffer(bkg);
 		gl.glClearBufferfv(GL_COLOR, 0, bkgBuffer);
 		
-		int mv_loc = gl.glGetUniformLocation(rendering_program, "mv_matrix");
-		int proj_loc = gl.glGetUniformLocation(rendering_program, "proj_matrix");
+		int mv_loc = gl.glGetUniformLocation(myModel.getRendering_program(), "mv_matrix");
+		int proj_loc = gl.glGetUniformLocation(myModel.getRendering_program(), "proj_matrix");
 
 		float aspect = (float) myModel.getMyCanvas().getWidth() / (float) myModel.getMyCanvas().getHeight();
 		Matrix3D pMat = perspective(60.0f, aspect, 0.1f, 1000.0f);
 
 		Matrix3D vMat = new Matrix3D();
-		vMat.translate(-myModel.getCameraX(), -myModel.getCameraY(), -myModel.getCameraZ());
+		vMat.translate(	-myModel.getCamera().getLocX(),
+						-myModel.getCamera().getLocY(), 
+						-myModel.getCamera().getLocZ());
 
 		Matrix3D mMat = new Matrix3D();
-		mMat.translate(myModel.getCrysLocX(), myModel.getCrysLocY(), myModel.getCrysLocZ());
+		mMat.translate(	myModel.getMoon1().getLocX(),
+						myModel.getMoon1().getLocY(),
+						myModel.getMoon1().getLocZ());
 
 		Matrix3D mvMat = new Matrix3D();
 		mvMat.concatenate(vMat);
@@ -58,7 +56,7 @@ public class View extends GLCanvas implements GLEventListener {
 		gl.glUniformMatrix4fv(mv_loc, 1, false, mvMat.getFloatValues(), 0);
 		gl.glUniformMatrix4fv(proj_loc, 1, false, pMat.getFloatValues(), 0);
 		
-		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		gl.glBindBuffer(GL_ARRAY_BUFFER, myModel.getVbo()[0]);
 		gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 		gl.glEnableVertexAttribArray(0);
 
@@ -79,19 +77,14 @@ public class View extends GLCanvas implements GLEventListener {
 		System.out.println("Java Version\t: " + System.getProperty("java.version"));
 		
 		//creates the rendering program
-		rendering_program = createShaderProgram();
+		myModel.setRendering_program(createShaderProgram());
 		
-		setupVertices();
-		myModel.setCameraX(0.0f);
-		myModel.setCameraY(0.0f);
-		myModel.setCameraZ(8.0f);
-		myModel.setCrysLocX(0.0f);
-		myModel.setCrysLocY(-2.0f);
-		myModel.setCrysLocZ(0.0f);
+		myModel.setupVertices();
+
 		
 		//
-		gl.glGenVertexArrays(vao.length, vao, 0);
-		gl.glBindVertexArray(vao[0]);
+		gl.glGenVertexArrays(myModel.getVao().length, myModel.getVao(), 0);
+		gl.glBindVertexArray(myModel.getVao()[0]);
 	}
 
 	@Override
@@ -103,28 +96,6 @@ public class View extends GLCanvas implements GLEventListener {
 	public void dispose(GLAutoDrawable arg0) {
 		
 	}
-	
-	private void setupVertices() {
-		GL4 gl = (GL4) GLContext.getCurrentGL();
-		float[] vertex_positions =
-		{	-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-			0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-			-0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.5f,
-			0.0f, 0.0f, 0.5f, 0.0f, -1.0f, 0.0f, 0.5f, 0.0f, 0.0f,
-			0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, -0.5f,
-			0.0f, 0.0f, -0.5f, 0.0f, -1.0f, 0.0f, -0.5f, 0.0f, 0.0f,
-		};
-		
-		gl.glGenVertexArrays(vao.length, vao, 0);
-		gl.glBindVertexArray(vao[0]);
-		gl.glGenBuffers(vbo.length, vbo, 0);
-		
-		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		FloatBuffer vertBuf = Buffers.newDirectFloatBuffer(vertex_positions);
-		gl.glBufferData(GL_ARRAY_BUFFER, vertBuf.limit()*4, vertBuf, GL_STATIC_DRAW);
-	}  //setupVertices()
 	
 	private Matrix3D perspective(float fovy, float aspect, float n, float f)
 	{	float q = 1.0f / ((float) Math.tan(Math.toRadians(0.5f * fovy)));
