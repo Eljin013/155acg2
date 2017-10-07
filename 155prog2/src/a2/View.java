@@ -119,8 +119,8 @@ public class View extends GLCanvas implements GLEventListener {
 		int[] linked = new int[1];
 	
 
-		String vshaderSource[] = GLSLUtils.readShaderSource("src/a2/vert.shader");
-		String fshaderSource[] = GLSLUtils.readShaderSource("src/a2/frag.shader");
+		String vshaderSource[] = GLSLUtils.readShaderSource("src/shaders/vert.shader");
+		String fshaderSource[] = GLSLUtils.readShaderSource("src/shaders/frag.shader");
 		int lengths[];
 
 		int vShader = gl.glCreateShader(GL_VERTEX_SHADER);
