@@ -33,6 +33,16 @@ public class View extends GLCanvas implements GLEventListener {
 		FloatBuffer bkgBuffer = Buffers.newDirectFloatBuffer(bkg);
 		gl.glClearBufferfv(GL_COLOR, 0, bkgBuffer);
 		
+		//draw the axes
+		gl.glBindBuffer(GL_ARRAY_BUFFER, myModel.getVbo()[0]);
+		gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+		gl.glEnableVertexAttribArray(0);
+
+		gl.glEnable(GL_DEPTH_TEST);
+		gl.glDepthFunc(GL_LEQUAL);
+		
+		gl.glDrawArrays(GL_LINES, 0, 6);
+		
 		int mv_loc = gl.glGetUniformLocation(myModel.getRendering_program(), "mv_matrix");
 		int proj_loc = gl.glGetUniformLocation(myModel.getRendering_program(), "proj_matrix");
 
@@ -56,7 +66,7 @@ public class View extends GLCanvas implements GLEventListener {
 		gl.glUniformMatrix4fv(mv_loc, 1, false, mvMat.getFloatValues(), 0);
 		gl.glUniformMatrix4fv(proj_loc, 1, false, pMat.getFloatValues(), 0);
 		
-		gl.glBindBuffer(GL_ARRAY_BUFFER, myModel.getVbo()[0]);
+		gl.glBindBuffer(GL_ARRAY_BUFFER, myModel.getVbo()[1]);
 		gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 		gl.glEnableVertexAttribArray(0);
 
@@ -81,7 +91,6 @@ public class View extends GLCanvas implements GLEventListener {
 		
 		myModel.setupVertices();
 
-		
 		//
 		gl.glGenVertexArrays(myModel.getVao().length, myModel.getVao(), 0);
 		gl.glBindVertexArray(myModel.getVao()[0]);

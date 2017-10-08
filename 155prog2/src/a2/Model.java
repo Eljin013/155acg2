@@ -21,6 +21,7 @@ public class Model {
 	private Sun sun;
 	private Planet planet1, planet2;
 	private Moon moon1, moon2;
+//	private float[] axes;
 
 	//instantiate commands
 	
@@ -32,6 +33,7 @@ public class Model {
 		planet2 = new Planet(0.0f, 0.0f, 0.0f);
 		moon1 = new Moon(0.0f, 0.0f, 0.0f);
 		moon2 = new Moon(0.0f, 0.0f, 0.0f);
+		
 	}
 
 	
@@ -75,7 +77,11 @@ public class Model {
 
 	public void setupVertices() {
 		GL4 gl = (GL4) GLContext.getCurrentGL();
-
+		float[] axes =
+			{0.0f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f,
+			 0.0f, 0.0f, 0.0f, 0.0f, 5.0f, 0.0f,
+			 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 5.0f
+			};
 		
 		
 		gl.glGenVertexArrays(vao.length, vao, 0);
@@ -83,8 +89,12 @@ public class Model {
 		gl.glGenBuffers(vbo.length, vbo, 0);
 		
 		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		FloatBuffer vertBuf = Buffers.newDirectFloatBuffer(moon1.getVertex_positions());
+		FloatBuffer vertBuf = Buffers.newDirectFloatBuffer(axes);
 		gl.glBufferData(GL_ARRAY_BUFFER, vertBuf.limit()*4, vertBuf, GL_STATIC_DRAW);
+		
+		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		FloatBuffer vertBuf1 = Buffers.newDirectFloatBuffer(moon1.getVertex_positions());
+		gl.glBufferData(GL_ARRAY_BUFFER, vertBuf1.limit()*4, vertBuf1, GL_STATIC_DRAW);
 	}  //setupVertices()
 	
 	public Camera getCamera() {
