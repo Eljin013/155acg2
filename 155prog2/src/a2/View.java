@@ -27,53 +27,43 @@ public class View extends GLCanvas implements GLEventListener {
 		
 		gl.glClear(GL_DEPTH_BUFFER_BIT);
 		
-		gl.glUseProgram(myModel.getRendering_program());
-		
+		//Clear the canvas
 		float bkg[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		FloatBuffer bkgBuffer = Buffers.newDirectFloatBuffer(bkg);
 		gl.glClearBufferfv(GL_COLOR, 0, bkgBuffer);
 		
-		//draw the axes
+		//Draw the axes
+		gl.glUseProgram(myModel.getAxesProgram());
+		
+		int axe_mv_loc = gl.glGetUniformLocation(myModel.getAxesProgram(), "axe_mv_mat");
+		int axe_proj_loc = gl.glGetUniformLocation(myModel.getAxesProgram(), "axe_proj_mat");
+		
+		gl.glUniformMatrix4fv(axe_mv_loc, 1, false, myModel.getMvMat().getFloatValues(), 0);
+		gl.glUniformMatrix4fv(axe_proj_loc, 1, false, myModel.getpMat().getFloatValues(), 0);
+		
 		gl.glBindBuffer(GL_ARRAY_BUFFER, myModel.getVbo()[0]);
 		gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 		gl.glEnableVertexAttribArray(0);
 
-		gl.glEnable(GL_DEPTH_TEST);
-		gl.glDepthFunc(GL_LEQUAL);
-		
 		gl.glDrawArrays(GL_LINES, 0, 6);
 		
-		int mv_loc = gl.glGetUniformLocation(myModel.getRendering_program(), "mv_matrix");
-		int proj_loc = gl.glGetUniformLocation(myModel.getRendering_program(), "proj_matrix");
-
-		float aspect = (float) myModel.getMyCanvas().getWidth() / (float) myModel.getMyCanvas().getHeight();
-		Matrix3D pMat = perspective(60.0f, aspect, 0.1f, 1000.0f);
-
-		Matrix3D vMat = new Matrix3D();
-		vMat.translate(	-myModel.getCamera().getLocX(),
-						-myModel.getCamera().getLocY(), 
-						-myModel.getCamera().getLocZ());
-
-		Matrix3D mMat = new Matrix3D();
-		mMat.translate(	myModel.getMoon1().getLocX(),
-						myModel.getMoon1().getLocY(),
-						myModel.getMoon1().getLocZ());
-
-		Matrix3D mvMat = new Matrix3D();
-		mvMat.concatenate(vMat);
-		mvMat.concatenate(mMat);
-		
-		gl.glUniformMatrix4fv(mv_loc, 1, false, mvMat.getFloatValues(), 0);
-		gl.glUniformMatrix4fv(proj_loc, 1, false, pMat.getFloatValues(), 0);
-		
-		gl.glBindBuffer(GL_ARRAY_BUFFER, myModel.getVbo()[1]);
-		gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-		gl.glEnableVertexAttribArray(0);
-
-		gl.glEnable(GL_DEPTH_TEST);
-		gl.glDepthFunc(GL_LEQUAL);
-		
-		gl.glDrawArrays(GL_TRIANGLES, 0, 24);
+		//Draw the object
+//		gl.glUseProgram(myModel.getObjectProgram());
+//		
+//		int obj_mv_loc = gl.glGetUniformLocation(myModel.getObjectProgram(), "obj_mv_mat");
+//		int obj_proj_loc = gl.glGetUniformLocation(myModel.getObjectProgram(), "obj_proj_mat");
+//		
+//		gl.glUniformMatrix4fv(obj_mv_loc, 1, false, mvMat.getFloatValues(), 0);
+//		gl.glUniformMatrix4fv(obj_proj_loc, 1, false, pMat.getFloatValues(), 0);
+//		
+//		gl.glBindBuffer(GL_ARRAY_BUFFER, myModel.getVbo()[0]);
+//		gl.glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+//		gl.glEnableVertexAttribArray(0);
+//
+//		gl.glEnable(GL_DEPTH_TEST);
+//		gl.glDepthFunc(GL_LEQUAL);
+//		
+//		gl.glDrawArrays(GL_TRIANGLES, 0, 18);
 	}
 
 	@Override
@@ -86,14 +76,18 @@ public class View extends GLCanvas implements GLEventListener {
 				Package.getPackage("com.jogamp.opengl").getImplementationVersion());
 		System.out.println("Java Version\t: " + System.getProperty("java.version"));
 		
-		//creates the rendering program
-		myModel.setRendering_program(createShaderProgram());
-		
-		myModel.setupVertices();
+		//creates the object program
+		myModel.setObjectProgram(createShaderProgram("src/shaders/objvert.shader", "src/shaders/objfrag.shader"));
+		myModel.setAxesProgram(createShaderProgram("src/shaders/axevert.shader", "src/shaders/axefrag.shader"));
 
-		//
+		myModel.setupVertices();
+		
+		
 		gl.glGenVertexArrays(myModel.getVao().length, myModel.getVao(), 0);
 		gl.glBindVertexArray(myModel.getVao()[0]);
+		
+		float aspect = (float) myModel.getMyCanvas().getWidth() / (float) myModel.getMyCanvas().getHeight();
+		myModel.setpMat(perspective(60.0f, aspect, 0.1f, 1000.0f));
 	}
 
 	@Override
@@ -121,15 +115,15 @@ public class View extends GLCanvas implements GLEventListener {
 		return r;
 	}  //perspective()
 
-	private int createShaderProgram()
+	private int createShaderProgram(String vert, String frag)
 	{	GL4 gl = (GL4) GLContext.getCurrentGL();
 		int[] vertCompiled = new int[1];
 		int[] fragCompiled = new int[1];
 		int[] linked = new int[1];
 	
 
-		String vshaderSource[] = GLSLUtils.readShaderSource("src/shaders/vert.shader");
-		String fshaderSource[] = GLSLUtils.readShaderSource("src/shaders/frag.shader");
+		String vshaderSource[] = GLSLUtils.readShaderSource(vert);
+		String fshaderSource[] = GLSLUtils.readShaderSource(frag);
 		int lengths[];
 
 		int vShader = gl.glCreateShader(GL_VERTEX_SHADER);

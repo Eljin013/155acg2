@@ -10,11 +10,19 @@ import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.awt.GLCanvas;
 
+import graphicslib3D.Matrix3D;
+
 public class Model {
 	private GLCanvas myCanvas;
 	private int vao[] = new int[1];
 	private int vbo[] = new int[4];
-	private int rendering_program;
+	private int object_program;
+	private int axes_program;
+	
+	private Matrix3D pMat;
+	private Matrix3D mvMat;
+	private Matrix3D mMat;
+	private Matrix3D vMat;
 	
 	//camera
 	private Camera camera;
@@ -33,6 +41,21 @@ public class Model {
 		planet2 = new Planet(0.0f, 0.0f, 0.0f);
 		moon1 = new Moon(0.0f, 0.0f, 0.0f);
 		moon2 = new Moon(0.0f, 0.0f, 0.0f);
+		
+		//Set up the matrices
+		vMat = new Matrix3D();
+		vMat.translate(	-camera.getLocX(),
+						-camera.getLocY(), 
+						-camera.getLocZ());
+
+		mMat = new Matrix3D();
+		mMat.translate(	moon1.getLocX(),
+						moon1.getLocY(),
+						moon1.getLocZ());
+
+		mvMat = new Matrix3D();
+		mvMat.concatenate(vMat);
+		mvMat.concatenate(mMat);
 		
 	}
 
@@ -65,22 +88,38 @@ public class Model {
 	}
 
 
-	public int getRendering_program() {
-		return rendering_program;
+	public int getObjectProgram() {
+		return object_program;
 	}
 
-
-	public void setRendering_program(int rendering_program) {
-		this.rendering_program = rendering_program;
+	public void setObjectProgram(int object_program) {
+		this.object_program = object_program;
 	}
 
+	public int getAxesProgram() {
+		return axes_program;
+	}
+
+	public void setAxesProgram(int axes_program) {
+		this.axes_program = axes_program;
+	}
 
 	public void setupVertices() {
 		GL4 gl = (GL4) GLContext.getCurrentGL();
+		
+		float[] pyramid =
+			{-0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.5f,
+			 0.0f, 0.0f, 0.5f, 0.0f, -1.0f, 0.0f, 0.5f, 0.0f, 0.0f,
+			 0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, -0.5f,
+			 0.0f, 0.0f, -0.5f, 0.0f, -1.0f, 0.0f, -0.5f, 0.0f, 0.0f,
+			 -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, -0.5f,
+			 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -0.5f,
+			};
+		
 		float[] axes =
 			{0.0f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f,
 			 0.0f, 0.0f, 0.0f, 0.0f, 5.0f, 0.0f,
-			 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 5.0f
+			 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 5.0f,
 			};
 		
 		
@@ -93,7 +132,7 @@ public class Model {
 		gl.glBufferData(GL_ARRAY_BUFFER, vertBuf.limit()*4, vertBuf, GL_STATIC_DRAW);
 		
 		gl.glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		FloatBuffer vertBuf1 = Buffers.newDirectFloatBuffer(moon1.getVertex_positions());
+		FloatBuffer vertBuf1 = Buffers.newDirectFloatBuffer(pyramid);
 		gl.glBufferData(GL_ARRAY_BUFFER, vertBuf1.limit()*4, vertBuf1, GL_STATIC_DRAW);
 	}  //setupVertices()
 	
@@ -143,5 +182,37 @@ public class Model {
 
 	public void setMoon2(Moon moon2) {
 		this.moon2 = moon2;
+	}
+
+	public Matrix3D getpMat() {
+		return pMat;
+	}
+
+	public void setpMat(Matrix3D pMat) {
+		this.pMat = pMat;
+	}
+
+	public Matrix3D getMvMat() {
+		return mvMat;
+	}
+
+	public void setMvMat(Matrix3D mvMat) {
+		this.mvMat = mvMat;
+	}
+
+	public Matrix3D getmMat() {
+		return mMat;
+	}
+
+	public void setmMat(Matrix3D mMat) {
+		this.mMat = mMat;
+	}
+
+	public Matrix3D getvMat() {
+		return vMat;
+	}
+
+	public void setvMat(Matrix3D vMat) {
+		this.vMat = vMat;
 	}
 }
